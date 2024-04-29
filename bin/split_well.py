@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import logging
+import gzip
 
 import pyfastx
 import utils
@@ -218,7 +219,7 @@ if __name__ == "__main__":
         1: 'AAAA',
         2: 'BBBB'
     }
-    out_dict = {k:openfile(f'{args.sample}_{v}.fq.gz', 'w') for k,v in test.items()}
+    out_dict = {k:openfile(f'{args.sample}_{v}.fq.gz', 'wt') for k,v in test.items()}
         
     fq1_list = args.fq1.split(',')
     fq2_list = args.fq2.split(',')

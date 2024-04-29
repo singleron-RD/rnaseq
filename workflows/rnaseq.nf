@@ -275,24 +275,29 @@ workflow RNASEQ {
 
     if (params.protocol != 'bulk') {
         SPLIT_WELL(
-            ch_fastq,
+            ch_fastq.multiple,
+            "${projectDir}/assets/",
             params.protocol
         )
-        ch_fastq = SPLIT_WELL.out.split_reads.map {
-            it -> [[id: it.simpleName, single_end:true ], it]
+        ch_fastq = SPLIT_WELL.out.split_reads.flatten().map {
+            it -> [[id: it.simpleName, single_end:true, strandedness: 'auto' ], it]
         }
     }
 
     //
     // MODULE: Concatenate FastQ files from same sample if required
     //
-    CAT_FASTQ (
-        ch_fastq.multiple
-    )
-    .reads
-    .mix(ch_fastq.single)
-    .set { ch_cat_fastq }
-    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
+    if (params.protocol == 'bulk') {
+        CAT_FASTQ (
+            ch_fastq.multiple
+        )
+        .reads
+        .mix(ch_fastq.single)
+        .set { ch_cat_fastq }
+        ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
+    } else {
+        ch_cat_fastq = ch_fastq
+    }
 
     //
     // SUBWORKFLOW: Read QC, extract UMI and trim adapters with TrimGalore!
