@@ -873,5 +873,11 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "protocol": {
+            "type": "string",
+            "default": "AccuraSCOPE-V1"
+        }
+    }
 }
