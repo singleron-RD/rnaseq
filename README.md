@@ -74,7 +74,7 @@ Each row represents a fastq file (single-end) or a pair of fastq files (paired e
 Now, you can run the pipeline using:
 
 ```bash
-nextflow run nf-core/rnaseq \
+nextflow run singleron-RD/rnaseq \
     --input samplesheet.csv \
     --outdir <OUTDIR> \
     --genome GRCh37 \

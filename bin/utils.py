@@ -11,6 +11,23 @@ import sys
 
 logger = logging.getLogger(__name__)
 
+
+def reverse_complement(seq):
+    """
+    >>> reverse_complement("NACGT")
+    'TGCAN'
+    """
+    dic = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N': 'N'}
+    return "".join([dic[x] for x in seq[::-1]])
+    
+
+def str_fq(name, seq, qual, comment='+'):
+    """
+    >>> str_fq('name', 'ACGT', 'ABCD')
+    '@name\\nACGT\\n+\\nABCD\\n'
+    """
+    return f'@{name}\n{seq}\n{comment}\n{qual}\n'
+
 def openfile(file_name, mode='rt', **kwargs):
     """open gzip or plain file"""
     if file_name.endswith('.gz'):
@@ -171,10 +188,6 @@ def get_protocol_dict(assets_dir):
     """
     Return:
     protocol_dict. Key: protocol name, value: protocol dict
-
-    >>> protocol_dict = get_protocol_dict("./assets/")
-    >>> protocol_dict["GEXSCOPE-MicroBead"]["pattern_dict"]
-    {'C': [slice(0, 12, None)], 'U': [slice(12, 20, None)]}
     """
     json_file = os.path.join(assets_dir, "protocols.json")
     protocol_dict = json.load(open(json_file))

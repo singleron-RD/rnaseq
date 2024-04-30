@@ -242,7 +242,7 @@ Do not use `-c <file>` to specify parameters as this will result in errors. Cust
 The above pipeline run specified with a params file in yaml format:
 
 ```bash
-nextflow run nf-core/rnaseq -profile docker -params-file params.yaml
+nextflow run singleron-RD/rnaseq -profile docker -params-file params.yaml
 ```
 
 with `params.yaml` containing:

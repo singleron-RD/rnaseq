@@ -173,7 +173,7 @@ process SPLIT_WELL {
     val protocol
 
     output:
-    path("*.fq.gz"), emit: split_reads
+    path("pass/*.fq.gz"), emit: pass_reads
     path  "versions.yml" , emit: versions
 
     script:
@@ -273,30 +273,31 @@ workflow RNASEQ {
         }
         .set { ch_fastq }
 
-    if (params.protocol != 'bulk') {
-        SPLIT_WELL(
-            ch_fastq.multiple,
-            "${projectDir}/assets/",
-            params.protocol
-        )
-        ch_fastq = SPLIT_WELL.out.split_reads.flatten().map {
-            it -> [[id: it.simpleName, single_end:true, strandedness: 'auto' ], it]
-        }
-    }
-
     //
     // MODULE: Concatenate FastQ files from same sample if required
     //
-    if (params.protocol == 'bulk') {
-        CAT_FASTQ (
-            ch_fastq.multiple
+    CAT_FASTQ (
+        ch_fastq.multiple
+    )
+    .reads
+    .mix(ch_fastq.single)
+    .set { ch_cat_fastq }
+    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
+
+    // split well 
+    if (params.protocol != 'bulk') {
+        SPLIT_WELL(
+            ch_cat_fastq,
+            "${projectDir}/assets/",
+            params.protocol
         )
-        .reads
-        .mix(ch_fastq.single)
-        .set { ch_cat_fastq }
-        ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
-    } else {
-        ch_cat_fastq = ch_fastq
+        ch_cat_fastq = SPLIT_WELL.out.pass_reads.flatten().map {
+            it -> [[id: it.simpleName, single_end:true, strandedness: 'auto' ], it]
+        }
+        // params
+        params.with_umi = true
+        params.skip_umi_extract = true
+        params.umitools_umi_separator = ":"
     }
 
     //
