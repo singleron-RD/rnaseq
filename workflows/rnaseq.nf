@@ -928,6 +928,10 @@ workflow RNASEQ {
         methods_description    = WorkflowRnaseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description, params)
         ch_methods_description = Channel.value(methods_description)
 
+        // skip samtools multiqc
+        ch_samtools_stats = Channel.empty()
+        ch_samtools_flagstat = Channel.empty()
+        ch_samtools_idxstats = Channel.empty()
         MULTIQC (
             ch_multiqc_config,
             ch_multiqc_custom_config.collect().ifEmpty([]),

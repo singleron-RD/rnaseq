@@ -66,6 +66,12 @@ def main():
     well_read_count = collections.defaultdict(lambda: collections.defaultdict(int))
     total_reads = 0
 
+    # extrap p5 UMI 
+    umi_p3_len = pattern_dict_p3["U"][0].stop - pattern_dict_p3["U"][0].start
+    umi_p5_len = pattern_dict_p5["U"][0].stop - pattern_dict_p5["U"][0].start
+    extra_len =  umi_p3_len - umi_p5_len
+    extra_UMI = ('ATCG' * 5)[:extra_len]
+
     fq1_list = args.fq1.split(',')
     fq2_list = args.fq2.split(',')
     """
@@ -87,16 +93,13 @@ def main():
                 if bc_p5 in bc_p5_mismatch_dict:
                     prime = 'p5'
                     bc = bc_p5_p3_dict[bc_p5_mismatch_dict[bc_p5]]
-                    umi = utils.get_seq_str(seq1, pattern_dict_p5["U"]) 
+                    umi = utils.get_seq_str(seq1, pattern_dict_p5["U"]) + extra_UMI
 
             if prime in ['p3','p5']:
                 well_read_count[bc][prime] += 1
                 read_name = ":".join([prime, str(total_reads), umi])
                 if bc not in outdict:
                     outdict[bc] = utils.openfile(f'{args.sample}_{bc}.fq.gz', 'wt')
-                if prime == 'p5':
-                    seq2 = utils.reverse_complement(seq2)
-                    qual2 = qual2[::-1]
                 outdict[bc].write(utils.str_fq(read_name, seq2, qual2))
     
     """
