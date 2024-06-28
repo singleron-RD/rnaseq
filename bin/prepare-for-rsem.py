@@ -124,7 +124,9 @@ def main(argv=None):
         argv = sys.argv
 
     # setup command line parser
-    parser = U.OptionParser(version="%prog version: $Id$", usage=usage, description=globals()["__doc__"])
+    parser = U.OptionParser(
+        version="%prog version: $Id$", usage=usage, description=globals()["__doc__"]
+    )
     group = U.OptionGroup(parser, "RSEM preparation specific options")
 
     group.add_option(
@@ -135,14 +137,22 @@ def main(argv=None):
         help="Comma-separated list of tags to transfer from read1 to read2",
     )
     group.add_option(
-        "--sam", dest="sam", action="store_true", default=False, help="input and output SAM rather than BAM"
+        "--sam",
+        dest="sam",
+        action="store_true",
+        default=False,
+        help="input and output SAM rather than BAM",
     )
 
     parser.add_option_group(group)
 
     # add common options (-h/--help, ...) and parse command line
     (options, args) = U.Start(
-        parser, argv=argv, add_group_dedup_options=False, add_umi_grouping_options=False, add_sam_options=False
+        parser,
+        argv=argv,
+        add_group_dedup_options=False,
+        add_umi_grouping_options=False,
+        add_sam_options=False,
     )
 
     skipped_stats = Counter()
@@ -186,19 +196,31 @@ def main(argv=None):
             # if this read is a non_primary alignment, we first want to check if it has a mate
             # with the non-primary alignment flag set.
 
-            mate_key_primary = True
-            mate_key_secondary = (read.next_reference_name, read.next_reference_start, False)
+            _mate_key_primary = True
+            _mate_key_secondary = (
+                read.next_reference_name,
+                read.next_reference_start,
+                False,
+            )
 
             # First look for a read that has the same primary/secondary status
             # as read (i.e. secondary mate for secondary read, and primary mate
             # for primary read)
-            mate_key = (read.next_reference_name, read.next_reference_start, read.is_secondary)
+            mate_key = (
+                read.next_reference_name,
+                read.next_reference_start,
+                read.is_secondary,
+            )
             mate = pick_mate(read, current_template, mate_key)
 
             # If none was found then look for the opposite (primary mate of secondary
             # read or seconadary mate of primary read)
             if mate is None:
-                mate_key = (read.next_reference_name, read.next_reference_start, not read.is_secondary)
+                mate_key = (
+                    read.next_reference_name,
+                    read.next_reference_start,
+                    not read.is_secondary,
+                )
                 mate = pick_mate(read, current_template, mate_key)
 
             # If we still don't have a mate, then their can't be one?
@@ -206,7 +228,17 @@ def main(argv=None):
                 skipped_stats["no_mate"] += 1
                 U.warn(
                     "Alignment {} has no mate -- skipped".format(
-                        "\t".join(map(str, [read.query_name, read.flag, read.reference_name, int(read.pos)]))
+                        "\t".join(
+                            map(
+                                str,
+                                [
+                                    read.query_name,
+                                    read.flag,
+                                    read.reference_name,
+                                    int(read.pos),
+                                ],
+                            )
+                        )
                     )
                 )
                 continue
@@ -249,7 +281,17 @@ def main(argv=None):
                 skipped_stats["skipped_not_read12"] += 1
                 U.warn(
                     "Alignment {} is neither read1 nor read2 -- skipped".format(
-                        "\t".join(map(str, [read.query_name, read.flag, read.reference_name, int(read.pos)]))
+                        "\t".join(
+                            map(
+                                str,
+                                [
+                                    read.query_name,
+                                    read.flag,
+                                    read.reference_name,
+                                    int(read.pos),
+                                ],
+                            )
+                        )
                     )
                 )
                 continue
@@ -260,7 +302,9 @@ def main(argv=None):
     U.info(
         "Total pairs output: {}, Pairs skipped - no mates: {},"
         " Pairs skipped - not read1 or 2: {}".format(
-            skipped_stats["pairs_output"], skipped_stats["no_mate"], skipped_stats["skipped_not_read12"]
+            skipped_stats["pairs_output"],
+            skipped_stats["no_mate"],
+            skipped_stats["skipped_not_read12"],
         )
     )
     U.Stop()

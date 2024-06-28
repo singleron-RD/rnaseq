@@ -2,11 +2,11 @@
 """
 Convert p5 barcode to p3 barcode
 """
+
 import argparse
 import json
 import os
 import logging
-import gzip
 import collections
 
 import pyfastx
@@ -14,9 +14,10 @@ import utils
 import sys
 
 # stdout
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO, stream=sys.stdout)
+logging.basicConfig(
+    format="%(asctime)s - %(message)s", level=logging.INFO, stream=sys.stdout
+)
 logger = logging.getLogger(__name__)
-
 
 
 def get_protocol_dict(assets_dir):
@@ -43,13 +44,13 @@ def get_protocol_dict(assets_dir):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sample', required=True)
-    parser.add_argument('--fq1', required=True)
-    parser.add_argument('--fq2', required=True)
-    parser.add_argument('--assets_dir', required=True)
-    parser.add_argument('--protocol', required=True)
-    parser.add_argument('--threshold', default=1e-3, type=float)
-    parser.add_argument('--n_cell', type=int)
+    parser.add_argument("--sample", required=True)
+    parser.add_argument("--fq1", required=True)
+    parser.add_argument("--fq2", required=True)
+    parser.add_argument("--assets_dir", required=True)
+    parser.add_argument("--protocol", required=True)
+    parser.add_argument("--threshold", default=1e-3, type=float)
+    parser.add_argument("--n_cell", type=int)
     args = parser.parse_args()
 
     protocol_dict = get_protocol_dict(args.assets_dir)
@@ -59,7 +60,7 @@ def main():
     bc_p3_mismatch_dict = utils.get_mismatch_dict(bc_p3)
     bc_p5_mismatch_dict = utils.get_mismatch_dict(bc_p5)
     # p3 p5 bc correspondance
-    bc_p5_p3_dict = {p5:p3 for p5,p3 in zip(bc_p5, bc_p3)}
+    bc_p5_p3_dict = {p5: p3 for p5, p3 in zip(bc_p5, bc_p3)}
 
     pattern_dict_p3 = protocol["pattern_dict_p3"]
     pattern_dict_p5 = protocol["pattern_dict_p5"]
@@ -67,49 +68,49 @@ def main():
     well_read_count = collections.defaultdict(lambda: collections.defaultdict(int))
     total_reads = 0
 
-    fq1_list = args.fq1.split(',')
-    fq2_list = args.fq2.split(',')
+    fq1_list = args.fq1.split(",")
+    fq2_list = args.fq2.split(",")
     """
     write seq2 to `{sample}_{bc}.fq.gz`. reverse complement seq2 if it is p5
     """
-    for fq1,fq2 in zip(fq1_list, fq2_list):
+    for fq1, fq2 in zip(fq1_list, fq2_list):
         fq1 = pyfastx.Fastx(fq1)
         fq2 = pyfastx.Fastx(fq2)
-        for (name1, seq1, qual1), (name2,seq2,qual2) in zip(fq1, fq2):
+        for (name1, seq1, qual1), (name2, seq2, qual2) in zip(fq1, fq2):
             total_reads += 1
-            prime = 'invalid'
+            prime = "invalid"
             bc_p3 = utils.get_seq_str(seq1, pattern_dict_p3["C"])
             if bc_p3 in bc_p3_mismatch_dict:
-                prime = 'p3'
+                prime = "p3"
                 bc = bc_p3_mismatch_dict[bc_p3]
                 umi = utils.get_seq_str(seq1, pattern_dict_p3["U"])
             else:
                 bc_p5 = utils.get_seq_str(seq1, pattern_dict_p5["C"])
                 if bc_p5 in bc_p5_mismatch_dict:
-                    prime = 'p5'
+                    prime = "p5"
                     bc = bc_p5_p3_dict[bc_p5_mismatch_dict[bc_p5]]
-                    umi = '-'
+                    umi = "-"
 
-            if prime in ['p3','p5']:
+            if prime in ["p3", "p5"]:
                 well_read_count[bc][prime] += 1
                 read_name = ":".join([prime, str(total_reads), umi])
                 if bc not in outdict:
-                    outdict[bc] = utils.openfile(f'{args.sample}_{bc}.fq.gz', 'wt')
+                    outdict[bc] = utils.openfile(f"{args.sample}_{bc}.fq.gz", "wt")
                 outdict[bc].write(utils.str_fq(read_name, seq2, qual2))
-    
+
     """
     move all bc fastq files to `pass` folder it has reads > total_reads * threshold
     move others to `below`
     """
-    if not os.path.exists('pass'):
-        os.mkdir('pass')
-        os.mkdir('below')
+    if not os.path.exists("pass"):
+        os.mkdir("pass")
+        os.mkdir("below")
     bc_read = []
     for bc in well_read_count:
-        bc_read.append((bc, well_read_count[bc]['p3'] + well_read_count[bc]['p5']))
-    bc_read.sort(key=lambda x:x[1], reverse=True)
+        bc_read.append((bc, well_read_count[bc]["p3"] + well_read_count[bc]["p5"]))
+    bc_read.sort(key=lambda x: x[1], reverse=True)
     for i, (bc, read) in enumerate(bc_read):
-        fn = f'{args.sample}_{bc}.fq.gz'
+        fn = f"{args.sample}_{bc}.fq.gz"
         valid = True
         if args.n_cell > 0:
             if i > args.n_cell:
@@ -117,21 +118,13 @@ def main():
         elif read < total_reads * args.threshold:
             valid = False
         if valid:
-            os.rename(fn, f'pass/{fn}')
+            os.rename(fn, f"pass/{fn}")
         else:
-            os.rename(fn, f'below/{fn}')
+            os.rename(fn, f"below/{fn}")
     # dump well_read_count json
-    with open(f'{args.sample}_well_read_count.json', 'w') as f:
+    with open(f"{args.sample}_well_read_count.json", "w") as f:
         json.dump(well_read_count, f, indent=4)
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
