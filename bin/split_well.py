@@ -26,7 +26,7 @@ def get_protocol_dict(assets_dir):
 
     >>> protocol_dict = get_protocol_dict("./assets/")
     >>> protocol_dict["AccuraSCOPE-V1"]["pattern_dict_p5"]
-    {'C': [slice(0, 6, None)], 'U': [slice(6, 11, None)]}
+    {'C': [slice(0, 6, None)]}
     """
     json_file = os.path.join(assets_dir, "protocols.json")
     protocol_dict = json.load(open(json_file))
@@ -49,6 +49,7 @@ def main():
     parser.add_argument('--assets_dir', required=True)
     parser.add_argument('--protocol', required=True)
     parser.add_argument('--threshold', default=1e-3, type=float)
+    parser.add_argument('--n_cell', type=int)
     args = parser.parse_args()
 
     protocol_dict = get_protocol_dict(args.assets_dir)
@@ -65,12 +66,6 @@ def main():
     outdict = {}
     well_read_count = collections.defaultdict(lambda: collections.defaultdict(int))
     total_reads = 0
-
-    # extrap p5 UMI 
-    umi_p3_len = pattern_dict_p3["U"][0].stop - pattern_dict_p3["U"][0].start
-    umi_p5_len = pattern_dict_p5["U"][0].stop - pattern_dict_p5["U"][0].start
-    extra_len =  umi_p3_len - umi_p5_len
-    extra_UMI = ('ATCG' * 5)[:extra_len]
 
     fq1_list = args.fq1.split(',')
     fq2_list = args.fq2.split(',')
@@ -93,7 +88,7 @@ def main():
                 if bc_p5 in bc_p5_mismatch_dict:
                     prime = 'p5'
                     bc = bc_p5_p3_dict[bc_p5_mismatch_dict[bc_p5]]
-                    umi = utils.get_seq_str(seq1, pattern_dict_p5["U"]) + extra_UMI
+                    umi = '-'
 
             if prime in ['p3','p5']:
                 well_read_count[bc][prime] += 1
@@ -109,9 +104,19 @@ def main():
     if not os.path.exists('pass'):
         os.mkdir('pass')
         os.mkdir('below')
-    for bc in outdict:
+    bc_read = []
+    for bc in well_read_count:
+        bc_read.append((bc, well_read_count[bc]['p3'] + well_read_count[bc]['p5']))
+    bc_read.sort(key=lambda x:x[1], reverse=True)
+    for i, (bc, read) in enumerate(bc_read):
         fn = f'{args.sample}_{bc}.fq.gz'
-        if (well_read_count[bc]['p3'] + well_read_count[bc]['p5']) >= total_reads * args.threshold:
+        valid = True
+        if args.n_cell > 0:
+            if i > args.n_cell:
+                valid = False
+        elif read < total_reads * args.threshold:
+            valid = False
+        if valid:
             os.rename(fn, f'pass/{fn}')
         else:
             os.rename(fn, f'below/{fn}')

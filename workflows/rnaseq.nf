@@ -158,7 +158,8 @@ include { BEDGRAPH_BEDCLIP_BEDGRAPHTOBIGWIG as BEDGRAPH_BEDCLIP_BEDGRAPHTOBIGWIG
 
 process SPLIT_WELL {
     tag "$meta.id"
-    label 'process_single'
+    cpus 1
+    time '24h'
 
     conda 'bioconda::pyfastx=2.1.0'
     container "biocontainers/pyfastx:2.1.0--py39h3d4b85c_0"
@@ -171,6 +172,7 @@ process SPLIT_WELL {
     tuple val(meta), path(reads)
     path assets_dir
     val protocol
+    val n_cell
 
     output:
     path("pass/*.fq.gz"), emit: pass_reads
@@ -187,7 +189,8 @@ process SPLIT_WELL {
         --fq1 ${forward.join( "," )} \\
         --fq2 ${reverse.join( "," )} \\
         --assets_dir ${assets_dir} \\
-        --protocol ${protocol} 
+        --protocol ${protocol} \\
+        --n_cell ${n_cell}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -289,15 +292,14 @@ workflow RNASEQ {
         SPLIT_WELL(
             ch_cat_fastq,
             "${projectDir}/assets/",
-            params.protocol
+            params.protocol,
+            params.n_cell,
         )
         ch_cat_fastq = SPLIT_WELL.out.pass_reads.flatten().map {
             it -> [[id: it.simpleName, single_end:true, strandedness: 'auto' ], it]
         }
         // params
-        params.with_umi = true
-        params.skip_umi_extract = true
-        params.umitools_umi_separator = ":"
+        params.with_umi = false
     }
 
     //
