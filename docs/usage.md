@@ -1,8 +1,7 @@
-# nf-core/rnaseq: Usage
+# singleron-RD/rnaseq: Usage
 
-## :warning: Please read this documentation on the nf-core website: [https://nf-co.re/rnaseq/usage](https://nf-co.re/rnaseq/usage)
+This pipeline is modified based on [nf-core/rnaseq](https://github.com/nf-core/rnaseq) to analyze accuraSCOPE RNA data.
 
-> _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
 
 ## Pipeline parameters
 
