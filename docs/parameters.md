@@ -61,7 +61,7 @@ Options for filtering reads prior to alignment
 | `bbsplit_fasta_list` | Path to comma-separated file containing a list of reference genomes to filter reads against with BBSplit. You have to also explicitly set `--skip_bbsplit false` if you want to use BBSplit. <details><summary>Help</summary><small>The file should contain 2 columns: short name and full path to reference genome(s) e.g. <br>```<br>mm10,/path/to/mm10.fa<br>ecoli,/path/to/ecoli.fa<br>```</small></details>| `string` |  |  |  |
 | `bbsplit_index` | Path to directory or tar.gz archive for pre-built BBSplit index. <details><summary>Help</summary><small>The BBSplit index will have to be built at least once with this pipeline (see `--save_reference` to save index). It can then be provided via `--bbsplit_index` for future runs.</small></details>| `string` |  |  |  |
 | `remove_ribo_rna` | Enable the removal of reads derived from ribosomal RNA using SortMeRNA. <details><summary>Help</summary><small>Any patterns found in the sequences defined by the '--ribo_database_manifest' parameter will be used.</small></details>| `boolean` |  |  |  |
-| `ribo_database_manifest` | Text file containing paths to fasta files (one per line) that will be used to create the database for SortMeRNA. <details><summary>Help</summary><small>By default, [rRNA databases](https://github.com/biocore/sortmerna/tree/master/data/rRNA_databases) defined in the SortMeRNA GitHub repo are used. You can see an example in the pipeline Github repository in `assets/rrna-default-dbs.txt`.<br>Please note that commercial/non-academic entities require [`licensing for SILVA`](https://www.arb-silva.de/silva-license-information) for these default databases.</small></details>| `string` | ${projectDir}/assets/rrna-db-defaults.txt |  |  |
+| `ribo_database_manifest` | Text file containing paths to fasta files (one per line) that will be used to create the database for SortMeRNA. <details><summary>Help</summary><small>By default, [rRNA databases](https://github.com/biocore/sortmerna/tree/master/data/rRNA_databases) defined in the SortMeRNA GitHub repo are used. You can see an example in the pipeline Github repository in `assets/rrna-default-dbs.txt`.<br>Please note that commercial/non-academic entities require [`licensing for SILVA`](https://www.arb-silva.de/silva-license-information) for these default databases.</small></details>| `string` | /SGRNJ06/randd/USER/zhouyiqi/2024/repo/rnaseq/assets/rrna-db-defaults.txt |  |  |
 
 ## UMI options
 
@@ -200,4 +200,4 @@ Less common options for the pipeline, typically set in a config file.
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
 | `protocol` |  | `string` | AccuraSCOPE-V1 |  |  |
-| `n_cell` |  | `integer` | 0 |  |  |
+| `well_sample` |  | `string` |  |  |  |

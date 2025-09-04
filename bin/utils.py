@@ -7,6 +7,8 @@ import logging
 import os
 import re
 import sys
+import pandas as pd
+from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 
@@ -206,3 +208,23 @@ def get_protocol_dict(assets_dir):
             cur["linker"] = [os.path.join(whitelist_dir, protocol, x) for x in linker]
         cur["pattern_dict"] = parse_pattern(cur["pattern"])
     return protocol_dict
+
+
+def one_col_to_list(file) -> list:
+    """
+    Read file with one column. Strip each line.
+    Returns col_list
+    """
+    df = pd.read_csv(file, header=None)
+    col1 = list(df.iloc[:, 0])
+    return [item.strip() for item in col1]
+
+
+def two_col_to_dict(file):
+    """
+    Read file with two columns.
+    Returns dict
+    """
+    df = pd.read_csv(file, header=None, sep="\t")
+    df = df.dropna()
+    return OrderedDict(zip(df[0], df[1]))

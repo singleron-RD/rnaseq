@@ -9,11 +9,3 @@ repos:
         args: [ --fix ]
       # Run the formatter.
       - id: ruff-format
-
-  - repo: local
-    hooks:
-      - id: parameter_docs
-        name: parameter_docs
-        entry: schema_doc.sh
-        language: script
-        pass_filenames: false

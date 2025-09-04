@@ -112,6 +112,7 @@ include { DUPRADAR                           } from '../modules/local/dupradar'
 include { MULTIQC                            } from '../modules/local/multiqc'
 include { MULTIQC_CUSTOM_BIOTYPE             } from '../modules/local/multiqc_custom_biotype'
 include { UMITOOLS_PREPAREFORRSEM as UMITOOLS_PREPAREFORSALMON } from '../modules/local/umitools_prepareforrsem'
+include { SPLIT_WELL                         } from '../modules/local/split_well'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -156,48 +157,7 @@ include { BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS as BAM_DEDUP_STATS_SAMTOOLS_UMITOOLS
 include { BEDGRAPH_BEDCLIP_BEDGRAPHTOBIGWIG as BEDGRAPH_BEDCLIP_BEDGRAPHTOBIGWIG_FORWARD } from '../subworkflows/nf-core/bedgraph_bedclip_bedgraphtobigwig'
 include { BEDGRAPH_BEDCLIP_BEDGRAPHTOBIGWIG as BEDGRAPH_BEDCLIP_BEDGRAPHTOBIGWIG_REVERSE } from '../subworkflows/nf-core/bedgraph_bedclip_bedgraphtobigwig'
 
-process SPLIT_WELL {
-    tag "$meta.id"
-    cpus 1
-    time '24h'
 
-    conda 'bioconda::pyfastx=2.1.0'
-    container "biocontainers/pyfastx:2.1.0--py39h3d4b85c_0"
-
-    input:
-    //
-    // Input reads are expected to come as: [ meta, [ pair1_read1, pair1_read2, pair2_read1, pair2_read2 ] ]
-    // Input array for a sample is created in the same order reads appear in samplesheet as pairs from replicates are appended to array.
-    //
-    tuple val(meta), path(reads)
-    path assets_dir
-    val protocol
-    val n_cell
-
-    output:
-    path("pass/*.fq.gz"), emit: pass_reads
-    path  "versions.yml" , emit: versions
-
-    script:
-    def args = task.ext.args ?: ''
-
-    // separate forward from reverse pairs
-    def (forward, reverse) = reads.collate(2).transpose()
-    """
-    split_well.py \\
-        --sample ${meta.id} \\
-        --fq1 ${forward.join( "," )} \\
-        --fq2 ${reverse.join( "," )} \\
-        --assets_dir ${assets_dir} \\
-        --protocol ${protocol} \\
-        --n_cell ${n_cell}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        pyfastx: \$(pyfastx --version | sed -e "s/pyfastx version //g")
-    END_VERSIONS
-    """
-}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -293,9 +253,9 @@ workflow RNASEQ {
             ch_cat_fastq,
             "${projectDir}/assets/",
             params.protocol,
-            params.n_cell,
+            params.well_sample,
         )
-        ch_cat_fastq = SPLIT_WELL.out.pass_reads.flatten().map {
+        ch_cat_fastq = SPLIT_WELL.out.signal.flatten().map {
             it -> [[id: it.simpleName, single_end:true, strandedness: 'auto' ], it]
         }
         // params
