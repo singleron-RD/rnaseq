@@ -65,6 +65,28 @@ def get_barcode_sample(
     return barcode_sample
 
 
+def get_barcode_in_sample(bc_file, well_sample_file):
+    well_barcode = get_well_barcode(bc_file)
+    well_sample = utils.two_col_to_dict(well_sample_file)
+    barcode_in_sample = []
+    for well, barcode in well_barcode.items():
+        if well in well_sample:
+            barcode_in_sample.append(barcode)
+    return barcode_in_sample
+
+
+def get_mismatch_dict(bc_file, well_sample_file):
+    """
+    Correct the barcodes to sample barcodes rather than noise barcodes as much as possible.
+    """
+    barcode_in_sample = get_barcode_in_sample(bc_file, well_sample_file)
+    all_bc = utils.one_col_to_list(bc_file)
+    mismatch_dict = utils.get_mismatch_dict(all_bc)
+    sample_mismatch_dict = utils.get_mismatch_dict(barcode_in_sample)
+    mismatch_dict.update(sample_mismatch_dict)
+    return mismatch_dict
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", required=True)
@@ -82,10 +104,8 @@ def main():
     protocol_dict = get_protocol_dict(args.assets_dir)
     protocol = protocol_dict[args.protocol]
     # mismatch_dict
-    bc_p3 = utils.one_col_to_list(protocol["bc_p3"])
-    bc_p5 = utils.one_col_to_list(protocol["bc_p5"])
-    p3_mismatch_dict = utils.get_mismatch_dict(bc_p3)
-    p5_mismatch_dict = utils.get_mismatch_dict(bc_p5)
+    p3_mismatch_dict = get_mismatch_dict(protocol["bc_p3"], args.well_sample)
+    p5_mismatch_dict = get_mismatch_dict(protocol["bc_p5"], args.well_sample)
     p3_linker = "ATACGCGGA"
     p3_linker_mismatch_dict = utils.get_mismatch_dict([p3_linker])
     # barcode sample
