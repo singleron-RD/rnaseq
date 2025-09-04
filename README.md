@@ -38,10 +38,13 @@ Columns:
 
 Example:
 ```tsv
-1   cell1
-2   cell2
-3   cell3
-4   cell4
+25  cell25
+26  cell26
+27  cell27
+28  cell28
+29  cell29
+30  cell30
+31  cell31
 ```
 
 **samplesheet.csv**
@@ -80,13 +83,13 @@ Example:
 
 ```tsv
 sample          p3      p5
-sample30        7106    9596
-sample27        7052    9929
-sample31        6042    9164
-sample28        5588    8067
-sample25        4845    6928
-sample29        4830    6331
-sample26        4807    7866
+cell30        7106    9596
+cell27        7052    9929
+cell31        6042    9164
+cell28        5588    8067
+cell25        4845    6928
+cell29        4830    6331
+cell26        4807    7866
 noise_well_13   3       1
 noise_well_75   2       1
 ```
